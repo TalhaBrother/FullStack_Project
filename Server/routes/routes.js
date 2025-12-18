@@ -40,9 +40,9 @@ userRoute.post('/register', async (req, res) => {
         const saltRounds = process.env.saltRounds
         let hashpassword = await bcrypt.hash(password, parseInt(saltRounds))
         let secretKey = process.env.secretKey
-        let token = jwt.sign({ username, age, contact, email }, secretKey);
         const newUser = new User({ ...req.body, password: hashpassword });
         await newUser.save()
+        let token = jwt.sign({id:newUser._id, username, age, contact, email }, secretKey);
         res.send({
             message: "Successful",
             user: newUser,
@@ -56,7 +56,7 @@ userRoute.post('/register', async (req, res) => {
         })
     }
 })
-userRoute.post("/login", async (req, res) => {
+userRoute.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body
         const { error } = loginSchema.validate(req.body)
@@ -80,8 +80,8 @@ userRoute.post("/login", async (req, res) => {
                 code: 400
             })
         }
-        let token = jwt.sign({ username}, process.env.secretKey);
-        res.send({
+        let token = jwt.sign({id:findUser._id, username}, process.env.secretKey);
+        res.status(200).send({
             message:"Login successfully!",
             token:token,
             code:200
@@ -93,6 +93,31 @@ userRoute.post("/login", async (req, res) => {
             message:"Failed to login!!!",
             code:400
         })
+    }
+})
+userRoute.get("/user",async(req,res)=>{
+    try {
+        const token = req.headers.authorization.split(" ")[1];
+        if(!token){
+            res.send({message:"Unauthorized access no token provided!",code:401})
+        }
+        const decoded = jwt.verify(token,process.env.secretKey)
+        if (!decoded) {
+            res.send({message:"Unauthorized access invalid token!",code:401})
+        }
+        console.log("Decoded Token",decoded)
+        const getUser=await User.findById(decoded?.id)
+        res.send({
+            message:"User fetched successfully!",
+            user:getUser,
+            code:200
+        })
+        
+    } catch (error) {
+      res.status(400).send({
+        message:"Failed to fetch user!",
+        code:400
+      })
     }
 })
 
