@@ -2,7 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import mongoose from 'mongoose'
 import dotenv from 'dotenv'
-import userRoute from './routes/routes.js'
+import userRoute from './routes/user.js'
+import messageRoute from './routes/messages.js'
+import authRoute from './routes/routes.js'
 
 const app = express()
 const port = 3000
@@ -17,7 +19,10 @@ mongoose.connect(dbURI).then(()=>{
 app.use(cors())
 app.use(express.json())
 
-app.use("/user",userRoute)
+app.use("/user",authRoute)
+app.use("/messages",messageRoute)
+app.use("/users",userRoute)
+
 app.get('/', (req, res) => {
   res.send('Hello World!')
 })

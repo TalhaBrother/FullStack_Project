@@ -1,6 +1,6 @@
 import express from 'express';
 import Joi from 'joi';
-const userRoute = express.Router();
+const authRoute = express.Router();
 import User from '../schema/schema.js';
 import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken"
@@ -19,7 +19,7 @@ const loginSchema = Joi.object({
 
 }).required()
 
-userRoute.post('/register', async (req, res) => {
+authRoute.post('/register', async (req, res) => {
     try {
         const { username, age, contact, email, password } = req.body;
         const { error } = registerSchema.validate(req.body);
@@ -56,7 +56,7 @@ userRoute.post('/register', async (req, res) => {
         })
     }
 })
-userRoute.post('/login', async (req, res) => {
+authRoute.post('/login', async (req, res) => {
     try {
         const { username, password } = req.body
         const { error } = loginSchema.validate(req.body)
@@ -95,7 +95,7 @@ userRoute.post('/login', async (req, res) => {
         })
     }
 })
-userRoute.get("/user",async(req,res)=>{
+authRoute.get("/user",async(req,res)=>{
     try {
         const token = req.headers.authorization.split(" ")[1];
         if(!token){
@@ -121,4 +121,4 @@ userRoute.get("/user",async(req,res)=>{
     }
 })
 
-export default userRoute;
+export default authRoute;
