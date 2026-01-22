@@ -1,4 +1,4 @@
-import User from("../models/userModel.js");
+import User from"../schema/schema.js";
 import express from "express";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
@@ -6,7 +6,7 @@ dotenv.config();
 const userRoute=express.Router();
 let authenticateUser=async(req,res,next)=>{
     try {
-        let token=req?.header?.aithorization?.split(" ")[1];
+        let token=req?.headers?.authorization?.split(" ")[1];
         if(!token){
             return res.status(401).json({message:"Unauthorized access No token provided!"});
         }

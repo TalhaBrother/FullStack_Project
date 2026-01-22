@@ -23,6 +23,7 @@ const Navbar = () => {
                     <Link to="/" className="mr-5 hover:text-gray-900">Dashboard</Link>
                     <Link to="/login" className="mr-5 hover:text-gray-900">Login</Link>
                     <Link to="/register" className="mr-5 hover:text-gray-900">Register</Link>
+                    <Link to="/chat" className="mr-5 hover:text-gray-900">Chat</Link>
 
                 </nav>
                 <button className="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0">

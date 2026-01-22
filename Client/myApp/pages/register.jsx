@@ -15,7 +15,7 @@ const Register = () => {
     username: yup.string().required("Username is required"),
     email: yup.string().email("Invalid email").required("Email is required"),
     age: yup.number().positive().required("Age is required"),
-    contact: yup.string().required("Contact is required"),
+    contact: yup.string().matches(/^[0-9]{10}$/, "Contact must be 10 digits").required("Contact is required"),
     password: yup.string()
       .min(6, "Password must be at least 6 characters")
       .matches(/^[a-zA-Z0-9]{6,30}$/, "Password must be alphanumeric")

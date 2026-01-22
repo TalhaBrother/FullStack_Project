@@ -9,22 +9,21 @@ const useUser=create((set)=>({
         const updatedUsers=[...previousUsers,newUser]; 
         return {user:updatedUsers}
     })},
-    updatedUsers:(newUsers)=>{set({user:newUsers})}
-}))
-(async()=>{
-    
-const token=Cookie.get("token");
-    try {
-        if(token){
-            const response=await axios.get("http://localhost:3000/user/user",{
-                headers:{Authorization:`Bearer ${token}`}
-            })
-            console.log("UserResponse:",response);
-            useUser.setState({user:response.data});
+    updatedUsers:(newUsers)=>{set({user:newUsers})},
+    fetchUser: async () => {
+        const token=Cookie.get("token");
+        try {
+            if(token){
+                const response=await axios.get("http://localhost:3000/user/user",{
+                    headers:{Authorization:`Bearer ${token}`}
+                })
+                console.log("UserResponse:",response);
+                set({user:response.data});
+            }
+        } catch (error) {
+            console.error("User fetch error:",error);
         }
-    } catch (error) {
-        console.error("User fetch error:",error);
     }
-}
-)();
+}))
+
 export default useUser

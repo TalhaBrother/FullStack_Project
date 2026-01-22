@@ -30,11 +30,7 @@ const LandingPage = () => {
 
         {/* Illustration Placeholder */}
         <div className="mt-12 w-full max-w-4xl">
-          <img
-            src="https://via.placeholder.com/800x400?text=Your+Illustration+Here"
-            alt="Landing Illustration"
-            className="w-full rounded-xl shadow-lg"
-          />
+        
         </div>
       </div>
     </div>

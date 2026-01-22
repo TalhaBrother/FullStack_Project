@@ -11,6 +11,7 @@ const registerSchema = Joi.object({
     contact: Joi.string().pattern(/^[0-9]{10}$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).required(),
+    role: Joi.string().valid('user', 'admin').optional()
 
 }).required()
 const loginSchema = Joi.object({
@@ -19,9 +20,37 @@ const loginSchema = Joi.object({
 
 }).required()
 
+const adminSchema = Joi.object({
+    username: Joi.string().required(),
+    password: Joi.string().min(6).pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).required(),
+    role: Joi.string().valid('admin').required()
+}).required()
+
+//unused currently but can be used for admin protected routes
+const adminAuth=async(req,res,next)=>{
+    try {
+        const token=req.headers.authorization?.split(" ")[1];
+        if(!token){
+            return res.status(401).json({message:"Unauthorized access No token provided!"});
+        }
+        let decoded=jwt.verify(token,process.env.secretKey);
+        if(!decoded || decoded.role !== 'admin'){
+            return res.status(403).json({message:"Unauthorized access Admin only!"});
+        }
+        let user=await User.findById(decoded?.id).select("-password");
+        if(!user){
+            return res.status(401).json({message:"Unauthorized access Admin not found!"});
+        }
+        req.user = user;
+        next();
+    } catch (error) {
+        console.error("Error in adminAuth middleware:", error);
+        return res.status(500).json({message:"Internal Server Error from admin Middleware route"});
+    }
+}
 authRoute.post('/register', async (req, res) => {
     try {
-        const { username, age, contact, email, password } = req.body;
+        const { username, age, contact, email, password, role } = req.body;
         const { error } = registerSchema.validate(req.body);
         if (error) {
             return res.send({
@@ -40,7 +69,8 @@ authRoute.post('/register', async (req, res) => {
         const saltRounds = process.env.saltRounds
         let hashpassword = await bcrypt.hash(password, parseInt(saltRounds))
         let secretKey = process.env.secretKey
-        const newUser = new User({ ...req.body, password: hashpassword });
+        const userRole = (role && ['user', 'admin'].includes(role)) ? role : 'user';
+        const newUser = new User({ ...req.body, password: hashpassword, role: userRole });
         await newUser.save()
         let token = jwt.sign({id:newUser._id, username, age, contact, email }, secretKey);
         res.send({
@@ -91,6 +121,43 @@ authRoute.post('/login', async (req, res) => {
         console.error(error.message)
         res.send({
             message:"Failed to login!!!",
+            code:400
+        })
+    }
+})
+authRoute.post('/admin',async(req,res)=>{
+    try {
+        const { username, password, role } = req.body;
+    const{error}=adminSchema.validate(req.body)
+    if (error) {
+        return res.status(409).send({
+            message: error.details[0].message,
+            code: 400
+        })
+    }
+    let findAdmin = await User.findOne({username, role:'admin'})
+    if(!findAdmin){
+        return res.status(409).send({
+            message:"Admin credentials are incorrect!",
+            code:400
+        })
+    }
+    let checkPassword = await bcrypt.compare(password, findAdmin.password)
+    if(!checkPassword){
+        return res.status(409).send({
+            message:"Admin password is incorrect!",
+            code:400
+        })
+    }
+    const token=jwt.sign({id:findAdmin._id, username, role:'admin'}, process.env.secretKey, { expiresIn: '1h' });
+    res.status(200).send({message:"Admin access granted!",
+    token:token,
+    code:200
+    })
+    } catch (error) {
+        console.error(error.message)
+        res.send({
+            message:"Failed to grant admin access!!!",
             code:400
         })
     }

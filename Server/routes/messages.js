@@ -56,7 +56,7 @@ messageRoute.get('/', async(req,res)=>{
 }
 })
 
-messageRoute.post(async(req,res)=>{
+messageRoute.post('/',async(req,res)=>{
     try {
         const {message, senderId, receiverId} = req.body
         if(!message || !senderId || !receiverId){
