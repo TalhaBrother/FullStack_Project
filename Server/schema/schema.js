@@ -13,6 +13,10 @@ role:{
     type:String,
     enum:['user','admin'],
     default: 'user',
+},
+profilePic:{
+  url:{type:String,},
+  public_id:{type:String,}
 }
 
   },{timestamps:true}

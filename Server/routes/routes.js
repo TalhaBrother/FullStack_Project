@@ -4,6 +4,9 @@ const authRoute = express.Router();
 import User from '../schema/schema.js';
 import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken"
+import dotenv from 'dotenv';
+import upload from '../Multer/upload.js';
+dotenv.config();
 
 const registerSchema = Joi.object({
     username: Joi.string(),
@@ -27,28 +30,31 @@ const adminSchema = Joi.object({
 }).required()
 
 //unused currently but can be used for admin protected routes
-const adminAuth=async(req,res,next)=>{
+const adminAuth = async (req, res, next) => {
     try {
-        const token=req.headers.authorization?.split(" ")[1];
-        if(!token){
-            return res.status(401).json({message:"Unauthorized access No token provided!"});
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).json({ message: "Unauthorized access No token provided!" });
         }
-        let decoded=jwt.verify(token,process.env.secretKey);
-        if(!decoded || decoded.role !== 'admin'){
-            return res.status(403).json({message:"Unauthorized access Admin only!"});
+        let decoded = jwt.verify(token, process.env.secretKey);
+        if (!decoded || decoded.role !== 'admin') {
+            return res.status(403).json({ message: "Unauthorized access Admin only!" });
         }
-        let user=await User.findById(decoded?.id).select("-password");
-        if(!user){
-            return res.status(401).json({message:"Unauthorized access Admin not found!"});
+        let user = await User.findById(decoded?.id).select("-password");
+        if (!user) {
+            return res.status(401).json({ message: "Unauthorized access Admin not found!" });
         }
         req.user = user;
         next();
     } catch (error) {
         console.error("Error in adminAuth middleware:", error);
-        return res.status(500).json({message:"Internal Server Error from admin Middleware route"});
+        return res.status(500).json({ message: "Internal Server Error from admin Middleware route" });
     }
 }
-authRoute.post('/register', async (req, res) => {
+authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+
     try {
         const { username, age, contact, email, password, role } = req.body;
         const { error } = registerSchema.validate(req.body);
@@ -70,9 +76,23 @@ authRoute.post('/register', async (req, res) => {
         let hashpassword = await bcrypt.hash(password, parseInt(saltRounds))
         let secretKey = process.env.secretKey
         const userRole = (role && ['user', 'admin'].includes(role)) ? role : 'user';
-        const newUser = new User({ ...req.body, password: hashpassword, role: userRole });
+        const newUser = new User({
+            username,
+            age,
+            contact,
+            email,
+            password: hashpassword,
+            role: userRole,
+            profilePic: req.file
+                ? {
+                    url: req.file.path,       // Cloudinary URL
+                    public_id: req.file.filename,
+                }
+                : undefined,
+        });
+
         await newUser.save()
-        let token = jwt.sign({id:newUser._id, username, age, contact, email }, secretKey);
+        let token = jwt.sign({ id: newUser._id, username, age, contact, email }, secretKey);
         res.send({
             message: "Successful",
             user: newUser,
@@ -96,95 +116,96 @@ authRoute.post('/login', async (req, res) => {
                 code: 400
             })
         }
-        let findUser = await User.findOne({username})
+        let findUser = await User.findOne({ username })
         if (!findUser) {
             return res.status(409).send({
                 message: "username doesn't exists!",
                 code: 400
             })
         }
-        let checkpassword =await bcrypt.compare(password, findUser.password)
+        let checkpassword = await bcrypt.compare(password, findUser.password)
         if (!checkpassword) {
             return res.status(409).send({
                 message: "Password is incorrect!",
                 code: 400
             })
         }
-        let token = jwt.sign({id:findUser._id, username}, process.env.secretKey);
+        let token = jwt.sign({ id: findUser._id, username }, process.env.secretKey);
         res.status(200).send({
-            message:"Login successfully!",
-            token:token,
-            code:200
+            message: "Login successfully!",
+            token: token,
+            code: 200
         })
 
     } catch (error) {
         console.error(error.message)
         res.send({
-            message:"Failed to login!!!",
-            code:400
-        })
-    }
-})
-authRoute.post('/admin',async(req,res)=>{
-    try {
-        const { username, password, role } = req.body;
-    const{error}=adminSchema.validate(req.body)
-    if (error) {
-        return res.status(409).send({
-            message: error.details[0].message,
+            message: "Failed to login!!!",
             code: 400
         })
     }
-    let findAdmin = await User.findOne({username, role:'admin'})
-    if(!findAdmin){
-        return res.status(409).send({
-            message:"Admin credentials are incorrect!",
-            code:400
+})
+authRoute.post('/admin', async (req, res) => {
+    try {
+        const { username, password, role } = req.body;
+        const { error } = adminSchema.validate(req.body)
+        if (error) {
+            return res.status(409).send({
+                message: error.details[0].message,
+                code: 400
+            })
+        }
+        let findAdmin = await User.findOne({ username, role: 'admin' })
+        if (!findAdmin) {
+            return res.status(409).send({
+                message: "Admin credentials are incorrect!",
+                code: 400
+            })
+        }
+        let checkPassword = await bcrypt.compare(password, findAdmin.password)
+        if (!checkPassword) {
+            return res.status(409).send({
+                message: "Admin password is incorrect!",
+                code: 400
+            })
+        }
+        const token = jwt.sign({ id: findAdmin._id, username, role: 'admin' }, process.env.secretKey, { expiresIn: '1h' });
+        res.status(200).send({
+            message: "Admin access granted!",
+            token: token,
+            code: 200
         })
-    }
-    let checkPassword = await bcrypt.compare(password, findAdmin.password)
-    if(!checkPassword){
-        return res.status(409).send({
-            message:"Admin password is incorrect!",
-            code:400
-        })
-    }
-    const token=jwt.sign({id:findAdmin._id, username, role:'admin'}, process.env.secretKey, { expiresIn: '1h' });
-    res.status(200).send({message:"Admin access granted!",
-    token:token,
-    code:200
-    })
     } catch (error) {
         console.error(error.message)
         res.send({
-            message:"Failed to grant admin access!!!",
-            code:400
+            message: "Failed to grant admin access!!!",
+            code: 400
         })
     }
 })
-authRoute.get("/user",async(req,res)=>{
+authRoute.get("/user", async (req, res) => {
     try {
         const token = req.headers.authorization.split(" ")[1];
-        if(!token){
-            res.send({message:"Unauthorized access no token provided!",code:401})
+        if (!token) {
+            res.send({ message: "Unauthorized access no token provided!", code: 401 })
         }
-        const decoded = jwt.verify(token,process.env.secretKey)
+        const decoded = jwt.verify(token, process.env.secretKey)
         if (!decoded) {
-            res.send({message:"Unauthorized access invalid token!",code:401})
+            res.send({ message: "Unauthorized access invalid token!", code: 401 })
         }
-        console.log("Decoded Token",decoded)
-        const getUser=await User.findById(decoded?.id)
+        console.log("Decoded Token", decoded)
+        const getUser = await User.findById(decoded?.id)
         res.send({
-            message:"User fetched successfully!",
-            user:getUser,
-            code:200
+            message: "User fetched successfully!",
+            user: getUser,
+            code: 200
         })
-        
+
     } catch (error) {
-      res.status(400).send({
-        message:"Failed to fetch user!",
-        code:400
-      })
+        res.status(400).send({
+            message: "Failed to fetch user!",
+            code: 400
+        })
     }
 })
 

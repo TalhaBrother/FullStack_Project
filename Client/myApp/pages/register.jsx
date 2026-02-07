@@ -19,7 +19,8 @@ const Register = () => {
     password: yup.string()
       .min(6, "Password must be at least 6 characters")
       .matches(/^[a-zA-Z0-9]{6,30}$/, "Password must be alphanumeric")
-      .required("Password is required")
+      .required("Password is required"),
+    profilePic: yup.mixed().notRequired()
   });
 
   const { register, handleSubmit, formState: { errors } } = useForm({
@@ -27,16 +28,39 @@ const Register = () => {
     mode: "onChange"
   });
 
-  let registerFormSubmit = async (data) => {
-    try {
-      let response = await axios.post("http://localhost:3000/user/register", data);
-      Cookie.set("token", response.data.token);
-      navigate("/");
-      alert("Registration successful!");
-    } catch (error) {
-      alert("Registration failed: " + error.message);
+ let registerFormSubmit = async (data) => {
+  try {
+    const formData = new FormData();
+
+    formData.append("username", data.username);
+    formData.append("email", data.email);
+    formData.append("age", data.age);
+    formData.append("contact", data.contact);
+    formData.append("password", data.password);
+
+    // 👇 IMPORTANT: file comes as array
+    if (data.profilePic && data.profilePic.length > 0) {
+      formData.append("profilePic", data.profilePic[0]);
     }
-  };
+
+    let response = await axios.post(
+      "http://localhost:3000/user/register",
+      formData,
+      {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      }
+    );
+
+    Cookie.set("token", response.data.token);
+    navigate("/");
+    alert("Registration successful!");
+  } catch (error) {
+    alert("Registration failed");
+  }
+};
+
 
   return (
     <div className='w-screen h-screen'>
@@ -98,6 +122,24 @@ const Register = () => {
                 className="w-full text-black  px-5 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-base sm:text-lg transition duration-200"
               />
               {errors.password && <span className="text-red-500 text-sm sm:text-base mt-2 block">{errors.password.message}</span>}
+            </div>
+            <div>
+              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
+                Profile Picture
+              </label>
+
+              <input
+                type="file"
+                accept="image/*"
+                {...register("profilePic")}
+                className="w-full text-black px-5 py-3 border border-gray-300 rounded-lg"
+              />
+
+              {errors.profilePic && (
+                <span className="text-red-500 text-sm mt-2 block">
+                  {errors.profilePic.message}
+                </span>
+              )}
             </div>
 
             <button
