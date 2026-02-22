@@ -2,6 +2,7 @@ import express from 'express';
 import Joi from 'joi';
 const authRoute = express.Router();
 import User from '../schema/schema.js';
+import Tution from '../schema/tution.js';
 import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken"
 import dotenv from 'dotenv';
@@ -208,5 +209,37 @@ authRoute.get("/user", async (req, res) => {
         })
     }
 })
-
+authRoute.post("/PostTution", async (req, res) => {
+    try {
+        const body= req.body
+        const { title, description, subject, location, salary, contact } = body
+        if (!title || !description || !subject || !location || !salary || !contact) {
+            return res.status(400).send({
+                message: "All fields are required!",
+                code: 400
+            })
+        }
+        console.log("Tution Post Body:", body)
+        const newTution = new Tution({
+            title,
+            description,
+            subject,
+            location,
+            salary,
+            contact
+        })
+        await newTution.save()
+        res.send({
+            message: "Tution post received successfully!",
+            data: body,
+            code: 200
+        })
+        
+    } catch (error) {
+        res.status(400).send({
+            message: "Failed to post tution!",
+            code: 400
+        })
+    }
+})
 export default authRoute;

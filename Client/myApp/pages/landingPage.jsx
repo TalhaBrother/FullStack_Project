@@ -1,4 +1,5 @@
 import Navbar from "../components/Navbar.jsx";
+import TutionPost from "../components/TutionPost.jsx";
 import useAuth from "../context/auth.js";
 
 const LandingPage = () => {
@@ -33,6 +34,7 @@ const LandingPage = () => {
         
         </div>
       </div>
+      <TutionPost/>
     </div>
   );
 };
