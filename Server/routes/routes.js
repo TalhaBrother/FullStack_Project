@@ -11,11 +11,10 @@ dotenv.config();
 
 const registerSchema = Joi.object({
     username: Joi.string(),
-    age: Joi.number().integer().min(0).required(),
     contact: Joi.string().pattern(/^[0-9]{10}$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).required(),
-    role: Joi.string().valid('user', 'admin').optional()
+    role: Joi.string().valid('parent', 'admin', 'tutor').optional()
 
 }).required()
 const loginSchema = Joi.object({
@@ -57,7 +56,7 @@ authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
     console.log("FILE:", req.file);
 
     try {
-        const { username, age, contact, email, password, role } = req.body;
+        const { username, contact, email, password, role } = req.body;
         const { error } = registerSchema.validate(req.body);
         if (error) {
             return res.send({
@@ -76,10 +75,9 @@ authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
         const saltRounds = process.env.saltRounds
         let hashpassword = await bcrypt.hash(password, parseInt(saltRounds))
         let secretKey = process.env.secretKey
-        const userRole = (role && ['user', 'admin'].includes(role)) ? role : 'user';
+        const userRole = (role && ['parent', 'admin', 'tutor'].includes(role)) ? role : 'parent';
         const newUser = new User({
             username,
-            age,
             contact,
             email,
             password: hashpassword,
@@ -93,7 +91,7 @@ authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
         });
 
         await newUser.save()
-        let token = jwt.sign({ id: newUser._id, username, age, contact, email }, secretKey);
+        let token = jwt.sign({ id: newUser._id, username, contact, email }, secretKey);
         res.send({
             message: "Successful",
             user: newUser,
@@ -242,4 +240,13 @@ authRoute.post("/PostTution", async (req, res) => {
         })
     }
 })
+
+authRoute.get("/PostTution", async (req, res) => {
+    try {
+        const tutions = await Tution.find().sort({ createdAt: -1 }); // Get newest first
+        res.status(200).json(tutions);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching data" });
+    }
+});
 export default authRoute;

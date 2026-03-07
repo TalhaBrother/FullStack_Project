@@ -6,10 +6,14 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar.jsx";
-import { toast } from 'react-toastify';
+import Swal from 'sweetalert2';
 import { useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import { fetchUser } from '../redux/authSlice';
+
 const Login=()=>{
   let navigate=useNavigate()
+  const dispatch = useDispatch();
 const loginSchema = yup.object({
   username: yup.string().required(),
   password: yup.string().min(6).matches(new RegExp('^[a-zA-Z0-9]{6,30}$')).required()
@@ -28,15 +32,39 @@ const loginSchema = yup.object({
         let response=await axios.post("http://localhost:3000/user/login",data)
         console.log(response.data)
         Cookie.set("token",response.data.token)
-        toast.success("Login Successful!")
-        navigate("/")
+        dispatch(fetchUser());
+        Swal.fire({
+          icon: 'success',
+          title: 'Login Successful!',
+          text: 'Welcome back.',
+          confirmButtonColor: '#4f46e5',
+        }).then(() => {
+          navigate("/")
+        });
     } catch (error) {
-      toast.error("Login Failed! "+error.message)
+        let errorMessage = "Login Failed! " + error.message;
+        if (error.response && error.response.data && error.response.data.message) {
+          errorMessage = error.response.data.message;
+        }
+        Swal.fire({
+          icon: 'error',
+          title: 'Login Failed',
+          text: errorMessage,
+          confirmButtonColor: '#4f46e5',
+        });
         console.error("LoginFormSubmitError!",error.message)
     }
   }
   useEffect(() => {
-    toast.info("Please login to continue");
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'info',
+      title: 'Please login to continue',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+    });
   }, []);
    return (
   <div className="w-screen">

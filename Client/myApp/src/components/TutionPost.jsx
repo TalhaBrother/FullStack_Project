@@ -2,6 +2,7 @@ import * as yup from "yup";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import axios from "axios";
+import Swal from 'sweetalert2';
 const TutionPost = () => {
     const tutionPostSchema = yup.object({
         title: yup.string().required(),
@@ -11,7 +12,7 @@ const TutionPost = () => {
         salary: yup.number().positive().required(),
         contact: yup.string().matches(/^[0-9]{10}$/).required(),
     });
-    const{register,handleSubmit,formState:{errors}}=useForm({
+    const{register,handleSubmit,reset,formState:{errors}}=useForm({
         resolver:yupResolver(tutionPostSchema),
         mode:"onChange"
     })
@@ -19,8 +20,21 @@ const TutionPost = () => {
         try {
             const tutionPostResponse = await axios.post("http://localhost:3000/user/PostTution", data);
             console.log("Tution Post Response:", tutionPostResponse.data);
+            reset();
+            Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: 'Tution posted successfully.',
+                confirmButtonColor: '#4f46e5',
+            });
         } catch (error) {
             console.error("Error posting tution:", error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Failed to post tution. Please try again.',
+                confirmButtonColor: '#4f46e5',
+            });
         }
     }
     return (

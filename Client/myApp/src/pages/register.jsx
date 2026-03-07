@@ -4,17 +4,16 @@ import Cookie from "js-cookie";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import axios from 'axios';
-import useAuth from '../context/auth.js';
 import { useNavigate } from 'react-router-dom';
 import Navbar from "../components/Navbar.jsx";
+import Swal from 'sweetalert2';
 
 const Register = () => {
   let navigate = useNavigate();
-  let updateUser = useAuth((state) => state.updateUser);
   const registerSchema = yup.object({
     username: yup.string().required("Username is required"),
     email: yup.string().email("Invalid email").required("Email is required"),
-    age: yup.number().positive().required("Age is required"),
+    role: yup.string().oneOf(['parent', 'tutor'], "Role is required").required("Role is required"),
     contact: yup.string().matches(/^[0-9]{10}$/, "Contact must be 10 digits").required("Contact is required"),
     password: yup.string()
       .min(6, "Password must be at least 6 characters")
@@ -34,7 +33,7 @@ const Register = () => {
 
     formData.append("username", data.username);
     formData.append("email", data.email);
-    formData.append("age", data.age);
+    formData.append("role", data.role);
     formData.append("contact", data.contact);
     formData.append("password", data.password);
 
@@ -54,10 +53,25 @@ const Register = () => {
     );
 
     Cookie.set("token", response.data.token);
-    navigate("/");
-    alert("Registration successful!");
+    Swal.fire({
+      icon: 'success',
+      title: 'Registration Successful!',
+      text: 'You have been registered successfully.',
+      confirmButtonColor: '#4f46e5',
+    }).then(() => {
+      navigate("/login");
+    });
   } catch (error) {
-    alert("Registration failed");
+    let errorMessage = "Registration failed. Please try again.";
+    if (error.response && error.response.data && error.response.data.message) {
+      errorMessage = error.response.data.message;
+    }
+    Swal.fire({
+      icon: 'error',
+      title: 'Registration Failed',
+      text: errorMessage,
+      confirmButtonColor: '#4f46e5',
+    });
   }
 };
 
@@ -93,14 +107,16 @@ const Register = () => {
             </div>
 
             <div>
-              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">Age</label>
-              <input
-                type='number'
-                placeholder='Enter your age'
-                {...register("age")}
-                className="w-full text-black  px-5 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-base sm:text-lg transition duration-200"
-              />
-              {errors.age && <span className="text-red-500 text-sm sm:text-base mt-2 block">{errors.age.message}</span>}
+              <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">Role</label>
+              <select
+                {...register("role")}
+                className="w-full text-black px-5 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none text-base sm:text-lg transition duration-200"
+              >
+                <option value="">Select your role</option>
+                <option value="parent">Parent</option>
+                <option value="tutor">Tutor</option>
+              </select>
+              {errors.role && <span className="text-red-500 text-sm sm:text-base mt-2 block">{errors.role.message}</span>}
             </div>
 
             <div>

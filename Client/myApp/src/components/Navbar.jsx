@@ -23,6 +23,7 @@ const Navbar = () => {
                     <Link to="/" className="mr-5 hover:text-gray-900">Dashboard</Link>
                     <Link to="/login" className="mr-5 hover:text-gray-900">Login</Link>
                     <Link to="/register" className="mr-5 hover:text-gray-900">Register</Link>
+                    <Link to="/tutions" className="mr-5 hover:text-gray-900">Tutions</Link>
                     <Link to="/chat" className="mr-5 hover:text-gray-900">Chat</Link>
 
                 </nav>

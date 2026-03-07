@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useAuth from '../context/auth.js';
+import { useSelector } from 'react-redux';
 import useUser from '../context/user.js';
 import Cookie from 'js-cookie';
 import * as yup from 'yup';
@@ -15,7 +15,7 @@ const Chat = () => {
   const [btnDisabled, setBtnDisabled] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
 
-  const { user } = useAuth();
+  const { user } = useSelector((state) => state.auth);
   const token = Cookie.get('token');
 
   const users = useUser((state) => state.users);
