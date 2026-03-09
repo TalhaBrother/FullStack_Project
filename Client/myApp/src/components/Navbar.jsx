@@ -2,48 +2,41 @@ import { Link } from "react-router";
 
 const Navbar = () => {
     return (
-        <header className="text-gray-600 body-font">
-            <div className="container mx-auto flex flex-wrap p-5 flex-col md:flex-row items-center">
-                <a className="flex title-font font-medium items-center text-gray-900 mb-4 md:mb-0">
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        className="w-10 h-10 text-white p-2 bg-indigo-500 rounded-full"
-                        viewBox="0 0 24 24"
-                    >
-                        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
-                    </svg>
-                    <span className="ml-3 text-xl">Project</span>
-                </a>
-                <nav className="md:ml-auto md:mr-auto flex flex-wrap items-center text-base justify-center">
-                    <Link to="/" className="mr-5 hover:text-gray-900">Dashboard</Link>
-                    <Link to="/login" className="mr-5 hover:text-gray-900">Login</Link>
-                    <Link to="/register" className="mr-5 hover:text-gray-900">Register</Link>
-                    <Link to="/tutions" className="mr-5 hover:text-gray-900">Tutions</Link>
-                    <Link to="/chat" className="mr-5 hover:text-gray-900">Chat</Link>
+        <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
+            <div className="container mx-auto px-6 h-20 flex items-center justify-between">
+                <Link to="/" className="flex items-center gap-3 group">
+                    <div className="w-11 h-11 bg-indigo-600 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-100 group-hover:bg-slate-900 transition-colors duration-300">
+                        <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2.5}
+                            className="w-6 h-6 text-white"
+                            viewBox="0 0 24 24"
+                        >
+                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
+                        </svg>
+                    </div>
+                    <span className="text-2xl font-black text-slate-900 tracking-tighter">PROJECT<span className="text-indigo-600 text-[10px] align-top ml-1">TM</span></span>
+                </Link>
 
+                <nav className="hidden lg:flex items-center gap-10">
+                    <Link to="/" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">Marketplace</Link>
+                    <Link to="/tutions" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">Opportunities</Link>
+                    <Link to="/chat" className="text-sm font-bold text-slate-500 hover:text-indigo-600 transition-colors uppercase tracking-widest">Messages</Link>
                 </nav>
-                <button className="inline-flex items-center bg-gray-100 border-0 py-1 px-3 focus:outline-none hover:bg-gray-200 rounded text-base mt-4 md:mt-0">
-                    Button
-                    <svg
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        className="w-4 h-4 ml-1"
-                        viewBox="0 0 24 24"
-                    >
-                        <path d="M5 12h14M12 5l7 7-7 7" />
-                    </svg>
-                </button>
+
+                <div className="flex items-center gap-4">
+                    <Link to="/login" className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Sign In</Link>
+                    <Link to="/register" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-slate-100 uppercase tracking-widest">
+                        Join Now
+                    </Link>
+                </div>
             </div>
         </header>
-
-    )
+    );
 }
-export default Navbar
+
+export default Navbar;

@@ -67,84 +67,104 @@ const loginSchema = yup.object({
     });
   }, []);
    return (
-  <div className="w-screen">
+  <div className="w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans">
     <Navbar />
 
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4 sm:p-6 lg:p-8">
-      <div className="w-full max-w-md bg-white rounded-xl shadow-2xl p-8 sm:p-10 lg:p-12">
+    <div className="flex-1 flex items-center justify-center p-6 md:p-12 animate-in fade-in zoom-in-95 duration-700">
+      <div className="w-full max-w-xl bg-white/40 backdrop-blur-2xl rounded-[3rem] border border-white/60 shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row">
         
-        <h1 className="text-4xl sm:text-5xl font-bold text-gray-800 mb-2 text-center">
-          Welcome Back
-        </h1>
-        <p className="text-gray-600 text-center mb-8 text-lg">
-          Login to your account
-        </p>
+        {/* Left Visual Accent (Hidden on mobile) */}
+        <div className="hidden md:flex w-1/3 bg-slate-900 p-12 flex-col justify-between relative overflow-hidden">
+           <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-500 rounded-full blur-3xl opacity-20 -mr-16 -mt-16"></div>
+           <div className="relative z-10">
+              <div className="w-10 h-10 bg-indigo-600 rounded-lg flex items-center justify-center mb-6">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" /></svg>
+              </div>
+              <h2 className="text-2xl font-black text-white leading-tight">Secure Access</h2>
+           </div>
+           <p className="relative z-10 text-slate-400 text-xs font-bold uppercase tracking-widest">Protected by Project™</p>
+        </div>
 
-        <form
-          onSubmit={handleSubmit(loginFormSubmit)}
-          className="space-y-6 sm:space-y-7"
-        >
-          {/* Username */}
-          <div>
-            <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-              Username
-            </label>
-            <input
-              placeholder="Enter your username"
-              {...register("username")}
-              className="w-full text-black px-5 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-lg
-                         focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none
-                         text-base sm:text-lg transition duration-200"
-            />
-            {errors.username && (
-              <span className="text-red-500 text-sm sm:text-base mt-2 block">
-                {errors.username.message}
-              </span>
-            )}
-          </div>
+        {/* Right Form Area */}
+        <div className="flex-1 p-10 md:p-14 bg-white/80">
+          <header className="mb-10">
+            <h1 className="text-4xl font-black text-slate-900 tracking-tight mb-2">
+              Welcome back
+            </h1>
+            <p className="text-slate-500 font-medium">
+              Enter your credentials to access your dashboard.
+            </p>
+          </header>
 
-          {/* Password */}
-          <div>
-            <label className="block text-sm sm:text-base font-medium text-gray-700 mb-2">
-              Password
-            </label>
-            <input
-              type="password"
-              placeholder="Enter your password"
-              {...register("password")}
-              className="w-full text-black px-5 py-3 sm:px-6 sm:py-4 border border-gray-300 rounded-lg
-                         focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none
-                         text-base sm:text-lg transition duration-200"
-            />
-            {errors.password && (
-              <span className="text-red-500 text-sm sm:text-base mt-2 block">
-                {errors.password.message}
-              </span>
-            )}
-          </div>
-
-          {/* Button */}
-          <button
-            type="submit"
-            className="w-full bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800
-                       text-white font-bold py-3 sm:py-4 px-6 sm:px-8
-                       text-base sm:text-lg rounded-lg transition duration-200
-                       ease-in-out transform hover:scale-105 active:scale-95 shadow-lg"
+          <form
+            onSubmit={handleSubmit(loginFormSubmit)}
+            className="space-y-8"
           >
-            Login
-          </button>
-        </form>
+            {/* Username */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-slate-900 uppercase tracking-widest pl-1">
+                Username
+              </label>
+              <input
+                placeholder="Type your username"
+                {...register("username")}
+                className="w-full text-slate-800 px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl
+                           focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none
+                           font-bold transition-all duration-300 shadow-sm"
+              />
+              {errors.username && (
+                <span className="text-red-500 text-xs font-bold mt-2 block pl-1">
+                  {errors.username.message}
+                </span>
+              )}
+            </div>
 
-        {/* Footer */}
-        <p className="text-center text-gray-600 text-sm sm:text-base mt-8">
-          Don’t have an account?{" "}
-          <a
-            href="/register"
-            className="text-indigo-600 hover:text-indigo-700 hover:underline font-semibold"
-          >
-            Register here
-          </a>
-        </p>
+            {/* Password */}
+            <div className="space-y-2">
+              <label className="block text-xs font-black text-slate-900 uppercase tracking-widest pl-1">
+                Password
+              </label>
+              <input
+                type="password"
+                placeholder="••••••••"
+                {...register("password")}
+                className="w-full text-slate-800 px-6 py-4 bg-slate-50 border-2 border-slate-50 rounded-2xl
+                           focus:bg-white focus:border-indigo-600 focus:ring-4 focus:ring-indigo-50 outline-none
+                           font-bold transition-all duration-300 shadow-sm"
+              />
+              {errors.password && (
+                <span className="text-red-500 text-xs font-bold mt-2 block pl-1">
+                  {errors.password.message}
+                </span>
+              )}
+            </div>
+
+            {/* Action Group */}
+            <div className="pt-4 flex flex-col gap-6">
+              <button
+                type="submit"
+                className="group w-full relative py-5 bg-slate-900 text-white font-black rounded-2xl 
+                           overflow-hidden shadow-2xl shadow-indigo-100 transition-all hover:bg-slate-800 active:scale-[0.98]"
+              >
+                <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <span className="relative flex items-center justify-center gap-2 text-lg">
+                  Login to Account
+                  <svg className="w-6 h-6 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                </span>
+              </button>
+
+              <p className="text-center text-slate-500 font-bold text-sm">
+                New here?{" "}
+                <a
+                  href="/register"
+                  className="text-indigo-600 hover:text-slate-900 transition-colors"
+                >
+                  Create an account
+                </a>
+              </p>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   </div>

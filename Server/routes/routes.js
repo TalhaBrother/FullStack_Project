@@ -249,4 +249,12 @@ authRoute.get("/PostTution", async (req, res) => {
         res.status(500).json({ message: "Error fetching data" });
     }
 });
+authRoute.get("/tutors", async (req, res) => {
+    try {
+        const tutors = await User.find({ role: 'tutor' }).select("-password");
+        res.status(200).json(tutors);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetching tutors" });
+    }
+});
 export default authRoute;
