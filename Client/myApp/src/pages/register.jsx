@@ -1,11 +1,10 @@
-import React, { use } from 'react';
+import React from 'react';
 import * as yup from 'yup';
 import Cookie from "js-cookie";
 import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Navbar from "../components/Navbar.jsx";
 import Swal from 'sweetalert2';
 
 const Register = () => {
@@ -74,9 +73,8 @@ const Register = () => {
     });
   }
 };
-   return (
+   return (
     <div className='w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans'>
-      <Navbar />
       <div className="flex-1 flex items-center justify-center p-6 md:p-12 animate-in fade-in slide-in-from-bottom-8 duration-700">
         <div className="w-full max-w-4xl bg-white/40 backdrop-blur-2xl rounded-[3.5rem] border border-white/60 shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row">
           

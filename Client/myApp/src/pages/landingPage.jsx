@@ -1,32 +1,25 @@
 import React, { useEffect, useState } from "react";
 import Cookie from "js-cookie";
-import Navbar from "../components/Navbar.jsx";
-import TutionPost from "../components/TutionPost.jsx"; // This is your tutions component
+import TutionPost from "../components/TutionPost.jsx";
 import TutorList from "../components/TutorList.jsx";
-import { useSelector, useDispatch } from 'react-redux';
-import { fetchUser } from '../redux/authSlice';
+import { useSelector } from 'react-redux';
 import Tutions from "./tutions.jsx";
 
+
 const LandingPage = () => {
-  const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
   const [activeTab, setActiveTab] = useState(null); // null, 'hire', or 'post'
 
-  useEffect(() => {
-    const token = Cookie.get("token");
-    // Only fetch if we have a token but no user data yet
-    if (!user && token) {
-      dispatch(fetchUser());
-    }
-  }, [user, dispatch]);
+
+
 
   // Logic: Visible to 'parent' or 'admin', but NOT 'tutor'
   const canSeeParentOptions = user?.role === 'parent' || user?.role === 'admin';
 
   return (
     <div className="w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
-      {/* 1. Navbar: Fixed height, consistent shadow */}
-      <Navbar />
+      {/* 1. Navbar handled in App.jsx */}
+
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 md:py-12 animate-in fade-in duration-700">
         {/* 2. Welcome Section */}
@@ -34,7 +27,7 @@ const LandingPage = () => {
            <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
               <div className="space-y-2">
                 <p className="text-indigo-600 font-bold tracking-widest uppercase text-sm">Dashboard Overview</p>
-                <h1 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight">
+                <h1 className="text-4xl md:text-5xl font-black text-white-900 tracking-tight">
                   Welcome back, <span className="bg-clip-text text-transparent bg-gradient-to-r from-indigo-600 to-violet-600">{user ? user.username : "Guest"}</span>
                 </h1>
                 <p className="text-slate-500 text-lg max-w-xl font-medium">

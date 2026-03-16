@@ -1,6 +1,9 @@
 import { Link } from "react-router";
+import { useSelector } from "react-redux";
 
 const Navbar = () => {
+    const { user } = useSelector((state) => state.auth);
+
     return (
         <header className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-xl border-b border-slate-200/60 shadow-sm">
             <div className="container mx-auto px-6 h-20 flex items-center justify-between">
@@ -29,7 +32,11 @@ const Navbar = () => {
                 </nav>
 
                 <div className="flex items-center gap-4">
-                    <Link to="/login" className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Sign In</Link>
+                    {user ? (
+                        <Link to="/profile" className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Profile</Link>
+                    ) : (
+                        <Link to="/login" className="px-6 py-2.5 text-sm font-bold text-slate-600 hover:text-indigo-600 transition-colors uppercase tracking-widest">Sign In</Link>
+                    )}
                     <Link to="/register" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-slate-100 uppercase tracking-widest">
                         Join Now
                     </Link>
@@ -39,4 +46,4 @@ const Navbar = () => {
     );
 }
 
-export default Navbar;
+export default Navbar;

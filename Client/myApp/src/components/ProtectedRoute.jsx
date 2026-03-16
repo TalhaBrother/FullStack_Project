@@ -6,17 +6,32 @@ import { fetchUser } from '../redux/authSlice';
 
 const ProtectedRoute = ({ children }) => {
   const token = Cookie.get('token');
-  const { user } = useSelector((state) => state.auth);
+  const { user, status } = useSelector((state) => state.auth);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (token && !user) {
+    if (token && !user && status === 'idle') {
       dispatch(fetchUser());
     }
-  }, [token, user, dispatch]);
+  }, [token, user, status, dispatch]);
 
-  // If there's no token, redirect to the login page
+  // If there's no token, redirect to the login page immediately
   if (!token) {
+    return <Navigate to="/login" replace />;
+  }
+
+  // While fetching user data, show a loading state to prevent flashing
+  if (status === 'loading') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      </div>
+    );
+  }
+
+  // If fetch failed and we have no user, redirect to login (token might be invalid)
+  if (status === 'failed' && !user) {
+    Cookie.remove('token'); // Clear invalid token
     return <Navigate to="/login" replace />;
   }
 

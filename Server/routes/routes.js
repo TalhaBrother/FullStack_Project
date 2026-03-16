@@ -92,6 +92,14 @@ authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
 
         await newUser.save()
         let token = jwt.sign({ id: newUser._id, username, contact, email }, secretKey);
+        const io = req.app.get('socketio');
+
+        // Send notification to ALL connected clients
+        io.emit('notification', {
+            title: 'New User Alert!',
+            message: `${newUser.username} just joined the portal.`,
+            timestamp: new Date()
+        });
         res.send({
             message: "Successful",
             user: newUser,
@@ -209,7 +217,7 @@ authRoute.get("/user", async (req, res) => {
 })
 authRoute.post("/PostTution", async (req, res) => {
     try {
-        const body= req.body
+        const body = req.body
         const { title, description, subject, location, salary, contact } = body
         if (!title || !description || !subject || !location || !salary || !contact) {
             return res.status(400).send({
@@ -227,12 +235,19 @@ authRoute.post("/PostTution", async (req, res) => {
             contact
         })
         await newTution.save()
+         // Send notification to ALL connected clients
+         const io = req.app.get('socketio');
+        io.emit('notification', {
+            title: 'New Tution Post!',
+            message: `${newTution.title} Tution just got posted.`,
+            timestamp: new Date()
+        });
         res.send({
             message: "Tution post received successfully!",
             data: body,
             code: 200
         })
-        
+
     } catch (error) {
         res.status(400).send({
             message: "Failed to post tution!",

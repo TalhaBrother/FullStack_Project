@@ -5,7 +5,6 @@ import { useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import Navbar from "../components/Navbar.jsx";
 import Swal from 'sweetalert2';
 import { useEffect } from 'react';
 import { useDispatch } from 'react-redux';
@@ -32,14 +31,18 @@ const loginSchema = yup.object({
         let response=await axios.post("http://localhost:3000/user/login",data)
         console.log(response.data)
         Cookie.set("token",response.data.token)
-        dispatch(fetchUser());
+        const userData = await dispatch(fetchUser()).unwrap();
         Swal.fire({
           icon: 'success',
           title: 'Login Successful!',
           text: 'Welcome back.',
           confirmButtonColor: '#4f46e5',
         }).then(() => {
-          navigate("/")
+          if (userData && userData.role === 'admin') {
+            navigate("/admin");
+          } else {
+            navigate("/");
+          }
         });
     } catch (error) {
         let errorMessage = "Login Failed! " + error.message;
@@ -68,7 +71,7 @@ const loginSchema = yup.object({
   }, []);
    return (
   <div className="w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans">
-    <Navbar />
+
 
     <div className="flex-1 flex items-center justify-center p-6 md:p-12 animate-in fade-in zoom-in-95 duration-700">
       <div className="w-full max-w-xl bg-white/40 backdrop-blur-2xl rounded-[3rem] border border-white/60 shadow-2xl shadow-indigo-100/50 overflow-hidden flex flex-col md:flex-row">
