@@ -1,4 +1,5 @@
 import { Link } from "react-router";
+
 import { useSelector } from "react-redux";
 
 const Navbar = () => {
@@ -46,4 +47,4 @@ const Navbar = () => {
     );
 }
 
-export default Navbar;
+export default Navbar;

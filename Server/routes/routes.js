@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt'
 import jwt from "jsonwebtoken"
 import dotenv from 'dotenv';
 import upload from '../Multer/upload.js';
+import Notification from '../schema/notification.js'
 dotenv.config();
 
 const registerSchema = Joi.object({
@@ -235,13 +236,25 @@ authRoute.post("/PostTution", async (req, res) => {
             contact
         })
         await newTution.save()
-         // Send notification to ALL connected clients
-         const io = req.app.get('socketio');
-        io.emit('notification', {
-            title: 'New Tution Post!',
-            message: `${newTution.title} Tution just got posted.`,
-            timestamp: new Date()
-        });
+        // Add this before io.emit(...)
+        try {
+            const notification = await Notification.create({
+                title: 'New Tution Post!',
+                message: `${newTution.title} Tution just got posted.`,
+                read: false
+            })
+
+            const io = req.app.get('socketio')
+            io.emit('notification', {
+                _id: notification._id,
+                title: notification.title,
+                message: notification.message,
+                timestamp: notification.createdAt,
+                read: false
+            })
+        } catch (notifErr) {
+            console.error("Notification failed:", notifErr.message) // silent fail
+        }
         res.send({
             message: "Tution post received successfully!",
             data: body,
@@ -272,4 +285,30 @@ authRoute.get("/tutors", async (req, res) => {
         res.status(500).json({ message: "Error fetching tutors" });
     }
 });
-export default authRoute;
+
+// Get all notifications (latest first)
+authRoute.get("/", async (req, res) => {
+  try {
+    const notifications = await Notification.find()
+      .sort({ createdAt: -1 })
+      .limit(10);
+    res.json(notifications);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Mark all as read
+authRoute.patch("/mark-read", async (req, res) => {
+  try {
+    await Notification.updateMany({ read: false }, { read: true });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// In your main server.js/app.js:
+// app.use("/notifications", notificationRoutes);
+
+export default authRoute

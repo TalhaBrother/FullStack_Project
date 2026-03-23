@@ -6,6 +6,7 @@ import Cookie from 'js-cookie';
 import { io } from "socket.io-client";
 import { toast } from 'react-toastify';
 import Toast from '../components/Toast';
+import NotificationBell from '../components/NotificationBell.jsx';
 import {
   FiUsers,
   FiBookOpen,
@@ -129,8 +130,7 @@ const AdminDashboard = () => {
 
           <div className="flex items-center gap-6">
             <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-all">
-              <FiBell className="w-6 h-6" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full border-2 border-white"></span>
+              <NotificationBell />
             </button>
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
               <div className="hidden md:block text-right text-sm">
