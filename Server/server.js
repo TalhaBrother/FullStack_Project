@@ -31,6 +31,7 @@ app.set('socketio', io)
 app.use("/user",authRoute)
 app.use("/messages",messageRoute)
 app.use("/users",userRoute)
+app.use("/notifications",authRoute)
 
 app.get('/', (req, res) => {
   res.send('Hello World!')

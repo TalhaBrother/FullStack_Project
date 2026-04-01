@@ -3,10 +3,12 @@ import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { logout } from '../redux/authSlice';
 import Cookie from 'js-cookie';
-import { io } from "socket.io-client";
+import axios from 'axios';
+import Swal from 'sweetalert2';
 import { toast } from 'react-toastify';
 import Toast from '../components/Toast';
 import NotificationBell from '../components/NotificationBell.jsx';
+import { io } from "socket.io-client";
 import {
   FiUsers,
   FiBookOpen,
@@ -27,6 +29,134 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [recentUsers, setRecentUsers] = useState([]);
+  const token = Cookie.get('token');
+
+  const fetchUsers = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/users", {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      if (response.data.code === 200) {
+        setRecentUsers(response.data.data);
+      }
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsers();
+  }, []);
+
+  const handleUserAction = async (u) => {
+    const result = await Swal.fire({
+      title: `<span class="text-slate-800 font-black">Manage User</span>`,
+      html: `<p class="text-slate-500 font-medium">What would you like to do with <b>${u.username}</b>?</p>`,
+      icon: 'question',
+      showCancelButton: true,
+      showDenyButton: true,
+      confirmButtonText: 'Update Details',
+      denyButtonText: 'Delete User',
+      confirmButtonColor: '#4f46e5',
+      denyButtonColor: '#ef4444',
+      cancelButtonColor: '#94a3b8',
+      customClass: {
+        popup: 'rounded-[2rem] border-none shadow-2xl',
+        confirmButton: 'rounded-xl font-bold px-6 py-3',
+        denyButton: 'rounded-xl font-bold px-6 py-3',
+        cancelButton: 'rounded-xl font-bold px-6 py-3'
+      }
+    });
+
+    if (result.isConfirmed) {
+      // UPDATE LOGIC
+      const { value: formValues } = await Swal.fire({
+        title: 'Update User Information',
+        html:
+          `<div class="space-y-4 text-left p-2">
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Username</label>
+              <input id="swal-input1" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" value="${u.username}">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Email</label>
+              <input id="swal-input2" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" value="${u.email}">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Contact</label>
+              <input id="swal-input3" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all" value="${u.contact || ''}">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-400 uppercase mb-1">Role</label>
+              <select id="swal-input4" class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 outline-none transition-all">
+                <option value="parent" ${u.role === 'parent' ? 'selected' : ''}>Parent</option>
+                <option value="tutor" ${u.role === 'tutor' ? 'selected' : ''}>Tutor</option>
+                <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Admin</option>
+              </select>
+            </div>
+          </div>`,
+        focusConfirm: false,
+        showCancelButton: true,
+        confirmButtonText: 'Save Changes',
+        confirmButtonColor: '#4f46e5',
+        customClass: {
+          popup: 'rounded-[2.5rem] p-8',
+          confirmButton: 'rounded-xl font-bold px-8 py-3 w-full mt-4'
+        },
+        preConfirm: () => {
+          return {
+            username: document.getElementById('swal-input1').value,
+            email: document.getElementById('swal-input2').value,
+            contact: document.getElementById('swal-input3').value,
+            role: document.getElementById('swal-input4').value
+          }
+        }
+      });
+
+      if (formValues) {
+        try {
+          const res = await axios.put(`http://localhost:3000/users/update/${u._id}`, formValues, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.data.code === 200) {
+            Swal.fire({ title: 'Updated!', text: 'User has been updated.', icon: 'success', customClass: { popup: 'rounded-3xl' } });
+            fetchUsers();
+          }
+        } catch (err) {
+          Swal.fire('Error!', 'Failed to update user.', 'error');
+        }
+      }
+    } else if (result.isDenied) {
+      // DELETE LOGIC
+      const confirmDelete = await Swal.fire({
+        title: 'Are you sure?',
+        text: "You won't be able to revert this!",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#ef4444',
+        cancelButtonColor: '#94a3b8',
+        confirmButtonText: 'Yes, delete it!',
+        customClass: { popup: 'rounded-[2rem]' }
+      });
+
+      if (confirmDelete.isConfirmed) {
+        try {
+          const res = await axios.delete(`http://localhost:3000/users/delete/${u._id}`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (res.data.code === 200) {
+            Swal.fire({ title: 'Deleted!', text: 'User has been removed.', icon: 'success', customClass: { popup: 'rounded-3xl' } });
+            fetchUsers();
+          }
+        } catch (err) {
+          Swal.fire('Error!', 'Failed to delete user.', 'error');
+        }
+      }
+    }
+  };
 
   useEffect(() => {
     if (user && user.role !== 'admin') {
@@ -62,14 +192,6 @@ const AdminDashboard = () => {
     { title: 'Active Tutors', value: '432', icon: <FiBookOpen className="w-6 h-6" />, color: 'bg-emerald-500' },
     { title: 'Revenue', value: '$12,850', icon: <FiDollarSign className="w-6 h-6" />, color: 'bg-indigo-500' },
     { title: 'Engagements', value: '89.5%', icon: <FiActivity className="w-6 h-6" />, color: 'bg-rose-500' },
-  ];
-
-  const recentUsers = [
-    { id: 1, name: 'Ahmed Khan', role: 'Tutor', status: 'Active', email: 'ahmed@example.com' },
-    { id: 2, name: 'Sara Ali', role: 'Student', status: 'Pending', email: 'sara@example.com' },
-    { id: 3, name: 'Zain Malik', role: 'Tutor', status: 'Active', email: 'zain@example.com' },
-    { id: 4, name: 'Fatima Zahra', role: 'Student', status: 'Inactive', email: 'fatima@example.com' },
-    { id: 5, name: 'Bilal Sheikh', role: 'Student', status: 'Active', email: 'bilal@example.com' },
   ];
 
 
@@ -129,9 +251,9 @@ const AdminDashboard = () => {
           </div>
 
           <div className="flex items-center gap-6">
-            <button className="relative p-2 text-slate-500 hover:bg-slate-100 rounded-xl transition-all">
+            <div className="relative">
               <NotificationBell />
-            </button>
+            </div>
             <div className="flex items-center gap-3 pl-6 border-l border-slate-200">
               <div className="hidden md:block text-right text-sm">
                 <p className="font-bold text-slate-800">{user?.username || 'Admin'}</p>
@@ -192,29 +314,32 @@ const AdminDashboard = () => {
                 </thead>
                 <tbody className="divide-y divide-slate-100">
                   {recentUsers.map((u) => (
-                    <tr key={u.id} className="group hover:bg-slate-50/50 transition-all">
+                    <tr key={u._id} className="group hover:bg-slate-50/50 transition-all">
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-3">
-                          <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100">
-                            {u.name.charAt(0)}
+                          <div className="w-9 h-9 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 font-bold border border-indigo-100 uppercase">
+                            {u.username.charAt(0)}
                           </div>
-                          <span className="font-bold text-slate-800">{u.name}</span>
+                          <span className="font-bold text-slate-800">{u.username}</span>
                         </div>
                       </td>
                       <td className="px-8 py-5">
-                        <span className={`text-sm font-semibold ${u.role === 'Tutor' ? 'text-violet-600 bg-violet-50' : 'text-blue-600 bg-blue-50'} px-3 py-1 rounded-full`}>
+                        <span className={`text-sm font-semibold ${u.role === 'tutor' ? 'text-violet-600 bg-violet-50' : 'text-blue-600 bg-blue-50'} px-3 py-1 rounded-full uppercase`}>
                           {u.role}
                         </span>
                       </td>
                       <td className="px-8 py-5">
                         <div className="flex items-center gap-2">
-                          <span className={`w-2 h-2 rounded-full ${u.status === 'Active' ? 'bg-emerald-500' : u.status === 'Pending' ? 'bg-amber-500' : 'bg-slate-300'}`}></span>
-                          <span className="text-sm font-medium text-slate-700">{u.status}</span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+                          <span className="text-sm font-medium text-slate-700">Active</span>
                         </div>
                       </td>
                       <td className="px-8 py-5 text-sm text-slate-500 font-medium">{u.email}</td>
                       <td className="px-8 py-5">
-                        <button className="text-slate-400 hover:text-indigo-600 transition-colors">
+                        <button 
+                          onClick={() => handleUserAction(u)}
+                          className="text-slate-400 hover:text-indigo-600 transition-colors p-2 hover:bg-slate-100 rounded-lg"
+                        >
                           <FiSettings className="w-5 h-5" />
                         </button>
                       </td>
