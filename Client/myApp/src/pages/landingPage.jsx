@@ -4,7 +4,6 @@ import TutionPost from "../components/TutionPost.jsx";
 import TutorList from "../components/TutorList.jsx";
 import { useSelector } from 'react-redux';
 import Tutions from "./tutions.jsx";
-import NotificationBell from "../components/NotificationBell.jsx";
 
 
 const LandingPage = () => {
@@ -20,9 +19,7 @@ const LandingPage = () => {
   return (
     <div className="w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
       {/* 1. Navbar handled in App.jsx */}
- <div className="flex items-center justify-end gap-4 w-full">
-                <NotificationBell />
-              </div>
+
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-6 py-8 md:py-12 animate-in fade-in duration-700">
         {/* 2. Welcome Section */}

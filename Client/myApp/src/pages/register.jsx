@@ -12,7 +12,7 @@ const Register = () => {
   const registerSchema = yup.object({
     username: yup.string().required("Username is required"),
     email: yup.string().email("Invalid email").required("Email is required"),
-    role: yup.string().oneOf(['parent', 'tutor'], "Role is required").required("Role is required"),
+    role: yup.string().oneOf(['parent', 'tutor', 'academy'], "Role is required").required("Role is required"),
     contact: yup.string().matches(/^[0-9]{10}$/, "Contact must be 10 digits").required("Contact is required"),
     password: yup.string()
       .min(6, "Password must be at least 6 characters")
@@ -132,6 +132,7 @@ const Register = () => {
                     <option value="">Select Role</option>
                     <option value="parent">Parent</option>
                     <option value="tutor">Tutor</option>
+                    <option value="academy">Academy</option>
                   </select>
                   {errors.role && <span className="text-red-500 text-xs font-bold mt-2 block pl-1">{errors.role.message}</span>}
                 </div>

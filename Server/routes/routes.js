@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken"
 import dotenv from 'dotenv';
 import upload from '../Multer/upload.js';
 import Notification from '../schema/notification.js'
+import axios from 'axios';
 dotenv.config();
 
 const registerSchema = Joi.object({
@@ -15,7 +16,7 @@ const registerSchema = Joi.object({
     contact: Joi.string().pattern(/^[0-9]{10}$/).required(),
     email: Joi.string().email().required(),
     password: Joi.string().min(6).pattern(new RegExp('^[a-zA-Z0-9]{6,30}$')).required(),
-    role: Joi.string().valid('parent', 'admin', 'tutor').optional()
+    role: Joi.string().valid('parent', 'admin', 'tutor', 'academy').optional()
 
 }).required()
 const loginSchema = Joi.object({
@@ -76,7 +77,7 @@ authRoute.post('/register', upload.single("profilePic"), async (req, res) => {
         const saltRounds = process.env.saltRounds
         let hashpassword = await bcrypt.hash(password, parseInt(saltRounds))
         let secretKey = process.env.secretKey
-        const userRole = (role && ['parent', 'admin', 'tutor'].includes(role)) ? role : 'parent';
+        const userRole = (role && ['parent', 'admin', 'tutor', 'academy'].includes(role)) ? role : 'parent';
         const newUser = new User({
             username,
             contact,
@@ -241,6 +242,7 @@ authRoute.post("/PostTution", async (req, res) => {
             const notification = await Notification.create({
                 title: 'New Tution Post!',
                 message: `${newTution.title} Tution just got posted.`,
+                targetRole: ['admin', 'tutor'],
                 read: false
             })
 
@@ -249,6 +251,7 @@ authRoute.post("/PostTution", async (req, res) => {
                 _id: notification._id,
                 title: notification.title,
                 message: notification.message,
+                targetRole: ['admin', 'tutor'],
                 timestamp: notification.createdAt,
                 read: false
             })
@@ -260,6 +263,21 @@ authRoute.post("/PostTution", async (req, res) => {
             data: body,
             code: 200
         })
+
+        // Notify WhatsApp Bridge
+        try {
+            await axios.post('http://localhost:3001/send-message', {
+                title: newTution.title,
+                subject: newTution.subject,
+                location: newTution.location,
+                salary: newTution.salary,
+                contact: newTution.contact,
+                description: newTution.description
+            });
+            console.log("WhatsApp Bridge notified successfully");
+        } catch (waErr) {
+            console.error("WhatsApp Bridge notification failed:", waErr.message);
+        }
 
     } catch (error) {
         res.status(400).send({
@@ -286,16 +304,98 @@ authRoute.get("/tutors", async (req, res) => {
     }
 });
 
-// Get all notifications (latest first)
+// Get all notifications (latest first) based on role
 authRoute.get("/", async (req, res) => {
   try {
-    const notifications = await Notification.find()
+    const token = req.headers.authorization?.split(" ")[1];
+    let query = { targetRole: 'all' }; // Default to public notifications
+
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.secretKey);
+        const user = await User.findById(decoded.id);
+        if (user) {
+          // Find notifications where user role is in the targetRole array OR it's 'all'
+          query = { 
+            targetRole: { $in: ['all', user.role] }
+          };
+        }
+      } catch (jwtErr) {
+        console.error("Invalid token in notification fetch:", jwtErr.message);
+      }
+    }
+
+    const notifications = await Notification.find(query)
       .sort({ createdAt: -1 })
-      .limit(10);
+      .limit(20);
     res.json(notifications);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
+});
+
+// Add route for tutor application notification
+authRoute.post("/apply", async (req, res) => {
+    try {
+        const { tutorName, tutionTitle } = req.body;
+        if (!tutorName || !tutionTitle) {
+            return res.status(400).send({ message: "Tutor name and tuition title are required!", code: 400 });
+        }
+
+        const notification = await Notification.create({
+            title: 'Tutor Application Alert',
+            message: `${tutorName} applied for the tuition: ${tutionTitle}`,
+            targetRole: ['admin'],
+            read: false
+        });
+
+        const io = req.app.get('socketio');
+        io.emit('notification', {
+            _id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            targetRole: ['admin'],
+            timestamp: notification.createdAt,
+            read: false
+        });
+
+        res.send({ message: "Application received and admin notified!", code: 200 });
+    } catch (error) {
+        console.error("Apply notification error:", error.message);
+        res.status(500).send({ message: "Failed to process application notification.", code: 500 });
+    }
+});
+
+// Add route for parent hire notification
+authRoute.post("/hire", async (req, res) => {
+    try {
+        const { parentName, tutorName } = req.body;
+        if (!parentName || !tutorName) {
+            return res.status(400).send({ message: "Parent name and tutor name are required!", code: 400 });
+        }
+
+        const notification = await Notification.create({
+            title: 'Hiring Request Alert',
+            message: `Parent ${parentName} wants to hire Tutor: ${tutorName}`,
+            targetRole: ['admin'],
+            read: false
+        });
+
+        const io = req.app.get('socketio');
+        io.emit('notification', {
+            _id: notification._id,
+            title: notification.title,
+            message: notification.message,
+            targetRole: ['admin'],
+            timestamp: notification.createdAt,
+            read: false
+        });
+
+        res.send({ message: "Hiring request sent to admin!", code: 200 });
+    } catch (error) {
+        console.error("Hire notification error:", error.message);
+        res.status(500).send({ message: "Failed to process hiring notification.", code: 500 });
+    }
 });
 
 // Mark all as read

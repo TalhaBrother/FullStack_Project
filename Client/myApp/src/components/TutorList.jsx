@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
 
 const TutorList = () => {
     const [tutors, setTutors] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { user } = useSelector((state) => state.auth);
 
     useEffect(() => {
         const fetchTutors = async () => {
@@ -20,6 +23,40 @@ const TutorList = () => {
 
         fetchTutors();
     }, []);
+
+    const handleHire = async (tutor) => {
+        if (!user) {
+            Swal.fire({
+                title: 'Not Logged In',
+                text: 'Please log in to hire a tutor.',
+                icon: 'warning',
+                confirmButtonColor: '#4f46e5',
+            });
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:3000/notifications/hire', {
+                parentName: user.username,
+                tutorName: tutor.username
+            });
+
+            if (response.data.code === 200) {
+                Swal.fire({
+                    title: 'Request Sent!',
+                    text: `Your request to hire ${tutor.username} has been sent to the admin.`,
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Hire error:", err);
+            Swal.fire('Error', 'Failed to send hiring request. Please try again later.', 'error');
+        }
+    };
 
     if (loading) return (
         <div className="flex flex-col items-center justify-center p-20 space-y-4">
@@ -95,7 +132,10 @@ const TutorList = () => {
                                     </div>
                                 </div>
                                 
-                                <button className="mt-auto w-full group/btn relative py-4 bg-slate-900 text-white font-black rounded-2xl overflow-hidden shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:bg-slate-900">
+                                <button 
+                                    onClick={() => handleHire(tutor)}
+                                    className="mt-auto w-full group/btn relative py-4 bg-slate-900 text-white font-black rounded-2xl overflow-hidden shadow-xl shadow-slate-200 transition-all hover:bg-slate-800 active:bg-slate-900"
+                                >
                                    <div className="absolute inset-0 w-full h-full bg-gradient-to-r from-indigo-600 to-violet-600 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
                                    <span className="relative flex items-center justify-center gap-2">
                                       Hire Now

@@ -1,10 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import Swal from 'sweetalert2';
+import { useSelector } from 'react-redux';
 
 const Tutions = () => {
     const [tutions, setTutions] = useState([]); // Initialize as empty array
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const { user } = useSelector((state) => state.auth);
 
     useEffect(() => {
         let isCancelled = false;
@@ -29,6 +32,40 @@ const Tutions = () => {
         fetchData();
         return () => { isCancelled = true; };
     }, []);
+
+    const handleApply = async (tuition) => {
+        if (!user) {
+            Swal.fire({
+                title: 'Not Logged In',
+                text: 'Please log in to apply for this tuition.',
+                icon: 'warning',
+                confirmButtonColor: '#4f46e5',
+            });
+            return;
+        }
+
+        try {
+            const response = await axios.post('http://localhost:3000/notifications/apply', {
+                tutorName: user.username,
+                tutionTitle: tuition.title
+            });
+
+            if (response.data.code === 200) {
+                Swal.fire({
+                    title: 'Application Sent!',
+                    text: `You have successfully applied for ${tuition.title}. The admin has been notified.`,
+                    icon: 'success',
+                    confirmButtonColor: '#4f46e5',
+                    customClass: {
+                        popup: 'rounded-[2rem]'
+                    }
+                });
+            }
+        } catch (err) {
+            console.error("Apply error:", err);
+            Swal.fire('Error', 'Failed to send application. Please try again later.', 'error');
+        }
+    };
 
     if (loading) return <div className="text-center mt-10 text-indigo-600 font-bold">Loading available tuitions...</div>;
     if (error) return <div className="text-center mt-10 text-red-500">{error}</div>;
@@ -62,7 +99,10 @@ const Tutions = () => {
                                 </div>
                                 <div className="mt-4 pt-4 border-t flex justify-between items-center">
                                     <span className="text-xs text-gray-400">Contact: {item.contact}</span>
-                                    <button className="text-indigo-600 font-semibold text-sm hover:text-indigo-800">
+                                    <button 
+                                        onClick={() => handleApply(item)}
+                                        className="text-indigo-600 font-semibold text-sm hover:text-indigo-800"
+                                    >
                                         Apply Now →
                                     </button>
                                 </div>

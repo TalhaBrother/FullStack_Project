@@ -3,6 +3,8 @@ import { useState, useEffect, useRef } from "react";
 import { io } from "socket.io-client";
 import axios from "axios";
 import { FiBell } from "react-icons/fi";
+import { useSelector } from "react-redux";
+import Cookie from "js-cookie";
 
 const NotificationBell = () => {
   const [notifications, setNotifications] = useState([]);
@@ -11,27 +13,38 @@ const NotificationBell = () => {
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
+  const { user } = useSelector((state) => state.auth);
+  const token = Cookie.get("token");
+
   // Fetch existing notifications on mount
   useEffect(() => {
     const fetchNotifications = async () => {
       try {
-        const res = await axios.get("http://localhost:3000/notifications");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
+        const res = await axios.get("http://localhost:3000/notifications", { headers });
         setNotifications(res.data);
       } catch (err) {
         console.error("Failed to fetch notifications:", err);
       }
     };
     fetchNotifications();
-  }, []);
+  }, [token]);
 
   // Listen for real-time notifications
   useEffect(() => {
     const socket = io("http://localhost:3000");
     socket.on("notification", (data) => {
-      setNotifications((prev) => [data, ...prev]);
+      // Role-based filtering for real-time events (handle targetRole as array)
+      const canSee = !data.targetRole || 
+                     data.targetRole.includes('all') || 
+                     (user && data.targetRole.includes(user.role));
+      
+      if (canSee) {
+        setNotifications((prev) => [data, ...prev]);
+      }
     });
     return () => socket.disconnect();
-  }, []);
+  }, [user]);
 
   // Close dropdown when clicking outside
   useEffect(() => {

@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import { useSelector } from "react-redux";
+import NotificationBell from "./NotificationBell";
 
 const Navbar = () => {
     const { user } = useSelector((state) => state.auth);
@@ -41,6 +42,7 @@ const Navbar = () => {
                     <Link to="/register" className="px-6 py-2.5 bg-slate-900 text-white text-sm font-bold rounded-xl hover:bg-indigo-600 transition-all duration-300 shadow-xl shadow-slate-100 uppercase tracking-widest">
                         Join Now
                     </Link>
+                    <NotificationBell/>
                 </div>
             </div>
         </header>
