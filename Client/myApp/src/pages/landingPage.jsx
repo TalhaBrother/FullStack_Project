@@ -8,13 +8,11 @@ import Tutions from "./tutions.jsx";
 
 const LandingPage = () => {
   const { user } = useSelector((state) => state.auth);
-  const [activeTab, setActiveTab] = useState(null); // null, 'hire', or 'post'
-
-
-
+  const [activeTab, setActiveTab] = useState(null); // null, 'hire', 'post', or 'tutions'
 
   // Logic: Visible to 'parent' or 'admin', but NOT 'tutor'
   const canSeeParentOptions = user?.role === 'parent' || user?.role === 'admin';
+  const isAcademy = user?.role === 'academy';
 
   return (
     <div className="w-screen min-h-screen bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-slate-100 via-indigo-50 to-white flex flex-col font-sans selection:bg-indigo-100 selection:text-indigo-900">
@@ -35,13 +33,15 @@ const LandingPage = () => {
               <p className="text-slate-500 text-lg max-w-xl font-medium">
                 {user?.role === 'parent' || user?.role === 'admin'
                   ? "Choose an action to get started with your learning journey."
+                  : user?.role === 'academy'
+                  ? "Manage your academy — hire tutors or browse all tuitions."
                   : "Discover new teaching opportunities and manage your sessions."}
               </p>
              
 
             </div>
 
-            {activeTab && canSeeParentOptions && (
+            {activeTab && (canSeeParentOptions || isAcademy) && (
               <button
                 onClick={() => setActiveTab(null)}
                 className="group flex items-center gap-3 bg-white/50 backdrop-blur-md px-5 py-2.5 rounded-full border border-slate-200 text-slate-600 font-bold hover:bg-slate-900 hover:text-white hover:border-slate-900 transition-all duration-300 shadow-sm"
@@ -97,6 +97,50 @@ const LandingPage = () => {
             ) : (
               <div className="animate-in fade-in zoom-in-95 duration-500">
                 {activeTab === "hire" ? <TutorList /> : <TutionPost />}
+              </div>
+            )
+          ) : isAcademy ? (
+            !activeTab ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-4">
+                {/* Academy Option 1: Hire a Tutor */}
+                <div className="relative group cursor-pointer" onClick={() => setActiveTab("hire")}>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-indigo-600 to-violet-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="relative bg-white p-8 md:p-10 rounded-[2.25rem] border border-slate-100 flex flex-col items-start transition-all duration-500 transform group-hover:-translate-y-2">
+                    <div className="w-16 h-16 bg-indigo-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-indigo-600 group-hover:scale-110 transition-all duration-500">
+                      <svg className="w-8 h-8 text-indigo-600 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">Hire a Tutor</h2>
+                    <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                      Browse our pool of verified educators and hire the perfect tutor for your academy's needs.
+                    </p>
+                    <span className="inline-flex items-center text-indigo-600 font-bold text-lg group-hover:translate-x-2 transition-transform">
+                      Browse Tutors
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </span>
+                  </div>
+                </div>
+
+                {/* Academy Option 2: View Tuitions */}
+                <div className="relative group cursor-pointer" onClick={() => setActiveTab("tutions")}>
+                  <div className="absolute -inset-1 bg-gradient-to-r from-amber-500 to-orange-500 rounded-[2.5rem] blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                  <div className="relative bg-white p-8 md:p-10 rounded-[2.25rem] border border-slate-100 flex flex-col items-start transition-all duration-500 transform group-hover:-translate-y-2">
+                    <div className="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mb-8 group-hover:bg-amber-500 group-hover:scale-110 transition-all duration-500">
+                      <svg className="w-8 h-8 text-amber-500 group-hover:text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" /></svg>
+                    </div>
+                    <h2 className="text-3xl font-black text-slate-900 mb-4 tracking-tight">View Tuitions</h2>
+                    <p className="text-slate-500 text-lg leading-relaxed mb-8">
+                      See all active tuition postings on the platform and explore available opportunities.
+                    </p>
+                    <span className="inline-flex items-center text-amber-500 font-bold text-lg group-hover:translate-x-2 transition-transform">
+                      View All Tuitions
+                      <svg className="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="animate-in fade-in zoom-in-95 duration-500">
+                {activeTab === "hire" ? <TutorList /> : <Tutions />}
               </div>
             )
           ) : (

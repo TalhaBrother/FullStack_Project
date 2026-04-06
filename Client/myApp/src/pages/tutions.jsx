@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import { useSelector } from 'react-redux';
+import Cookie from 'js-cookie';
 
 const Tutions = () => {
     const [tutions, setTutions] = useState([]); // Initialize as empty array
@@ -45,9 +46,14 @@ const Tutions = () => {
         }
 
         try {
+            const token = Cookie.get('token');
             const response = await axios.post('http://localhost:3000/notifications/apply', {
                 tutorName: user.username,
                 tutionTitle: tuition.title
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             if (response.data.code === 200) {

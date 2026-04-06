@@ -337,14 +337,25 @@ authRoute.get("/", async (req, res) => {
 // Add route for tutor application notification
 authRoute.post("/apply", async (req, res) => {
     try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).send({ message: "Unauthorized", code: 401 });
+        }
+        const decoded = jwt.verify(token, process.env.secretKey);
+        const user = await User.findById(decoded.id);
+        
+        if (user.role !== 'tutor' && user.role !== 'academy') {
+            return res.status(403).send({ message: "Only tutors or academies can apply for tuitions.", code: 403 });
+        }
+
         const { tutorName, tutionTitle } = req.body;
         if (!tutorName || !tutionTitle) {
             return res.status(400).send({ message: "Tutor name and tuition title are required!", code: 400 });
         }
 
         const notification = await Notification.create({
-            title: 'Tutor Application Alert',
-            message: `${tutorName} applied for the tuition: ${tutionTitle}`,
+            title: user.role === 'academy' ? 'Academy Application Alert' : 'Tutor Application Alert',
+            message: `${user.role === 'academy' ? 'Academy' : 'Tutor'} ${tutorName} applied for the tuition: ${tutionTitle}`,
             targetRole: ['admin'],
             read: false
         });
@@ -369,14 +380,25 @@ authRoute.post("/apply", async (req, res) => {
 // Add route for parent hire notification
 authRoute.post("/hire", async (req, res) => {
     try {
+        const token = req.headers.authorization?.split(" ")[1];
+        if (!token) {
+            return res.status(401).send({ message: "Unauthorized", code: 401 });
+        }
+        const decoded = jwt.verify(token, process.env.secretKey);
+        const user = await User.findById(decoded.id);
+        
+        if (user.role !== 'parent' && user.role !== 'academy') {
+            return res.status(403).send({ message: "Only parents or academies can hire tutors.", code: 403 });
+        }
+
         const { parentName, tutorName } = req.body;
         if (!parentName || !tutorName) {
             return res.status(400).send({ message: "Parent name and tutor name are required!", code: 400 });
         }
 
         const notification = await Notification.create({
-            title: 'Hiring Request Alert',
-            message: `Parent ${parentName} wants to hire Tutor: ${tutorName}`,
+            title: user.role === 'academy' ? 'Academy Hiring Request' : 'Hiring Request Alert',
+            message: `${user.role === 'academy' ? 'Academy' : 'Parent'} ${parentName} wants to hire Tutor: ${tutorName}`,
             targetRole: ['admin'],
             read: false
         });

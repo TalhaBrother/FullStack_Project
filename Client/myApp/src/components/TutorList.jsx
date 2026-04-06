@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
+import Cookie from 'js-cookie';
 import { useSelector } from 'react-redux';
 
 const TutorList = () => {
@@ -36,9 +37,14 @@ const TutorList = () => {
         }
 
         try {
+            const token = Cookie.get('token');
             const response = await axios.post('http://localhost:3000/notifications/hire', {
                 parentName: user.username,
                 tutorName: tutor.username
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
             });
 
             if (response.data.code === 200) {
