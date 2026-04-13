@@ -430,7 +430,5 @@ authRoute.patch("/mark-read", async (req, res) => {
   }
 });
 
-// In your main server.js/app.js:
-// app.use("/notifications", notificationRoutes);
 
 export default authRoute

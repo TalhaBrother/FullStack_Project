@@ -8,7 +8,7 @@ dotenv.config();
 
 const app = express();
 const port = process.env.PORT || 3001;
-const groupId = process.env.WHATSAPP_GROUP_ID;
+const groupId = String(process.env.WHATSAPP_GROUP_ID).split(',').map(id => id.trim());
 
 app.use(express.json());
 
@@ -41,11 +41,31 @@ client.on('auth_failure', (msg) => {
     console.error('WhatsApp Authentication failure:', msg);
 });
 
+// Get all WhatsApp groups
+app.get('/get-groups', async (req, res) => {
+    try {
+        const chats = await client.getChats();
+        const groups = chats
+            .filter(chat => chat.isGroup)
+            .map(group => ({
+                id: group.id._serialized,   // ← this is your group ID
+                name: group.name,
+                participants: group.participants.length
+            }));
+
+        res.status(200).json({ success: true, groups });
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
+
+
+// Endpoint to send message
 // Endpoint to send message
 app.post('/send-message', async (req, res) => {
     const { title, subject, location, salary, contact, description } = req.body;
 
-    if (!groupId) {
+    if (!groupId || groupId.length === 0) {
         return res.status(500).json({ error: 'WhatsApp Group ID not configured in .env' });
     }
 
@@ -65,14 +85,18 @@ ${description}
 _Sent via Tuition Portal Bridge_
     `.trim();
 
-    try {
-        await client.sendMessage(groupId, message);
-        console.log('Message sent to WhatsApp Group');
-        res.status(200).json({ success: true, message: 'WhatsApp alert sent successfully!' });
-    } catch (error) {
-        console.error('Failed to send WhatsApp message:', error);
-        res.status(500).json({ success: false, error: 'Failed to send WhatsApp message' });
+    // ✅ Loop through each group ID
+    for (const id of groupId) {
+        try {
+            const chat = await client.getChatById(id);  // ✅ getChatById not sendMessage
+            await chat.sendMessage(message);
+            console.log(`✅ Message sent to group: ${id}`);
+        } catch (error) {
+            console.error(`❌ Failed for group ${id}:`, error.message);
+        }
     }
+
+    res.status(200).json({ success: true, message: 'WhatsApp alerts sent!' });
 });
 
 client.initialize();

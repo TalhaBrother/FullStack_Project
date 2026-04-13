@@ -30,6 +30,7 @@ const AdminDashboard = () => {
   const location = useLocation();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [recentUsers, setRecentUsers] = useState([]);
+  const [totalTuitions, setTotalTuitions] = useState(0);
   const token = Cookie.get('token');
 
   const fetchUsers = async () => {
@@ -47,8 +48,18 @@ const AdminDashboard = () => {
     }
   };
 
+  const fetchTuitions = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/user/PostTution");
+      setTotalTuitions(response.data.length);
+    } catch (error) {
+      console.error("Error fetching tuitions:", error);
+    }
+  };
+
   useEffect(() => {
     fetchUsers();
+    fetchTuitions();
   }, []);
 
   const handleUserAction = async (u) => {
@@ -188,10 +199,10 @@ const AdminDashboard = () => {
 
 
   const stats = [
-    { title: 'Total Students', value: '1,284', icon: <FiUsers className="w-6 h-6" />, color: 'bg-blue-500' },
-    { title: 'Active Tutors', value: '432', icon: <FiBookOpen className="w-6 h-6" />, color: 'bg-emerald-500' },
-    { title: 'Revenue', value: '$12,850', icon: <FiDollarSign className="w-6 h-6" />, color: 'bg-indigo-500' },
-    { title: 'Engagements', value: '89.5%', icon: <FiActivity className="w-6 h-6" />, color: 'bg-rose-500' },
+    { title: 'Total Tutors', value: recentUsers.filter(u => u.role === 'tutor').length, icon: <FiUsers className="w-6 h-6" />, color: 'bg-blue-500' },
+    { title: 'Total Academies', value: recentUsers.filter(u => u.role === 'academy').length, icon: <FiHome className="w-6 h-6" />, color: 'bg-emerald-500' },
+    { title: 'Total Parents', value: recentUsers.filter(u => u.role === 'parent').length, icon: <FiUsers className="w-6 h-6" />, color: 'bg-indigo-500' },
+    { title: 'Tuition Posts', value: totalTuitions, icon: <FiBookOpen className="w-6 h-6" />, color: 'bg-rose-500' },
   ];
 
 
